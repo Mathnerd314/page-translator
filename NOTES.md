@@ -102,3 +102,14 @@ function pageIsInForeignLanguage() {
 Add tests for language matching logic
 - page's language: missing, sv, sv-SV, en-SV, SV-SV, EN-SV
 - browser: en, en-US, sp, sp-US
+
+
+# ADO submission
+
+Summary:
+Translate any page inline using Google Translate or Microsoft Translator. A translate icon will appear in the address bar when a page is detected to be in a foreign language. Keeps your UI minimal.
+
+Support website: https://github.com/jeremiahlee/page-translator/issues
+
+Notes to Reviewer: 
+The translate page action will only appear on pages detected to be in a language not in your browser's preferred language list (about:preferences#content Languages), unless you override the detection in the add-on's options. On Android, it will always be displayed because browser.tabs.detectLanguage is not available in Firefox for Android.
