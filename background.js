@@ -103,7 +103,7 @@ Page Translator functionality
 
 function injectTranslatorCode() {
     let googleCode = `
-        let docBody = document.body;
+        var docBody = document.body;
 
         if (docBody !== null) {
             let googleTranslateCallback = document.createElement('script');
@@ -122,7 +122,7 @@ function injectTranslatorCode() {
     `;
 
     let microsoftCode = `
-        let docBody = document.body;
+        var docBody = document.body;
 
         if (docBody !== null) {
             let div = '<div id="MicrosoftTranslatorWidget" class="Dark" style="color:white;background-color:#555555"></div>';
