@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Page Translator",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "author": "Jeremiah Lee",
     "developer": {
         "name": "Jeremiah Lee",
@@ -32,5 +32,11 @@
     },
     "options_ui": {
         "page": "options/options.html"
+    },
+    "applications": {
+        "gecko": {
+            "id": "{79f4bfc6-b1da-4dc4-85cc-ecbcc5dd152e}",
+            "update_url": "https://raw.githubusercontent.com/jeremiahlee/page-translator/master/updates.json"
+        }
     }
 }
