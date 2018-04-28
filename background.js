@@ -207,3 +207,11 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
 Bind clicks on the page action icon to the WebExtension
 */
 browser.pageAction.onClicked.addListener(injectTranslatorCode);
+
+
+/*
+When Page Translator is installed or updated, show the release notes on the options page.
+*/
+browser.runtime.onInstalled.addListener(function() {
+    browser.runtime.openOptionsPage();
+});
