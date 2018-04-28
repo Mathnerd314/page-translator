@@ -23,4 +23,4 @@ If you'd prefer to always have the translate icon displayed, check "Always show 
 To change the translation service, select the service you'd like to use in the "Translate using" dropdown menu.
 
 
-© 2017 Jeremiah Lee. Page Translator is released under the ISC License.
+© 2017–2018 Jeremiah Lee. Page Translator is released under the ISC License.
