@@ -28,19 +28,28 @@ async function userAlwaysWantsIcon() {
     }
 }
 
-async function pageIsInForeignLanguage(tabId) {
-    // Get the page's language. If not found, assume it's foreign.
-    // Better to show the translate icon when it is not needed than vice versa
+/*
+Returns true if user set option to automatically translate pages in foreign language
+*/
+async function userWantsImmediateTranslation() {
+    let option = await browser.storage.local.get("automaticallyTranslate");
+
+    if (typeof option.automaticallyTranslate !== "boolean") {
+        return false;
+    } else {
+        return option.automaticallyTranslate;
+    }
+}
+
+async function getPageLanguage(tabId) {
     try {
-        var pageLanguage = await browser.tabs.detectLanguage(tabId);
+        return await browser.tabs.detectLanguage(tabId);
     } catch (err) {
-        return true;
+        return "und";
     }
+}
 
-    if (!pageLanguage || pageLanguage === "und") {
-        return true;
-    }
-
+function pageIsInForeignLanguage(pageLanguage) {
     // Normalize page language and browser languages
     pageLanguage = pageLanguage.toLowerCase();
 
@@ -82,12 +91,25 @@ async function pageIsInForeignLanguage(tabId) {
 
 /*
 Show the Page Translator page action in the browser address bar, if applicable.
+If user always wants the icon, show it.
+If page is in foreign language, show it.
+    If user wants auto translation, invoke it.
 */
 async function initializePageAction(tab) {
-    if (protocolIsApplicable(tab.url) &&
-        (await userAlwaysWantsIcon() === true || await pageIsInForeignLanguage(tab.id) === true)
-    ) {
+    if (!protocolIsApplicable(tab.url)) {
+        browser.pageAction.hide(tab.id);
+        return;
+    }
+    
+    let pageLanguage = await getPageLanguage(tab.id);
+    let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
+
+    if (await userAlwaysWantsIcon() === true || pageNeedsTranslating === true) {
         browser.pageAction.show(tab.id);
+
+        if (pageNeedsTranslating && (await userWantsImmediateTranslation() === true)) {
+            injectTranslatorCode();
+        }
     } else {
         browser.pageAction.hide(tab.id);
     }
