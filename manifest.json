@@ -1,13 +1,13 @@
 {
     "manifest_version": 2,
     "name": "Page Translator",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "author": "Jeremiah Lee",
     "developer": {
         "name": "Jeremiah Lee",
-        "url": "https://jeremiahlee.com/"
+        "url": "https://www.jeremiahlee.com/"
     },
-    "description": "Translate any page using Google Translate or Microsoft Translator.",
+    "description": "Translate any page using Google Translate or Microsoft Translator.\n\n***New in version 1.0.4***\n\nAdded option to automatically insert Google Translate or Microsoft Translator when a foreign language is detected",
     "homepage_url": "https://github.com/jeremiahlee/page-translator/",
     "icons": {
         "16": "icons/icon-16.png",
