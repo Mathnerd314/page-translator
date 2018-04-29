@@ -49,9 +49,22 @@ async function getPageLanguage(tabId) {
     }
 }
 
+function pageHasKnownLanguage(pageLanguage) {
+    if (pageLanguage === "und") {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 function pageIsInForeignLanguage(pageLanguage) {
     // Normalize page language and browser languages
     pageLanguage = pageLanguage.toLowerCase();
+
+    // If language is unknown, assume page is in native language
+    if (pageLanguage === "und") {
+        return false;
+    }
 
     let navigatorLanguages = navigator.languages.map(navigatorLanguage => {
         return navigatorLanguage.toLowerCase();
@@ -100,11 +113,15 @@ async function initializePageAction(tab) {
         browser.pageAction.hide(tab.id);
         return;
     }
-    
+
     let pageLanguage = await getPageLanguage(tab.id);
+    let pageLanguageKnown = pageHasKnownLanguage(pageLanguage);
     let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
 
-    if (await userAlwaysWantsIcon() === true || pageNeedsTranslating === true) {
+    if (await userAlwaysWantsIcon() === true || 
+        pageLanguageKnown === false ||  // Better to show UI and not be needed
+        pageNeedsTranslating === true
+    ) {
         browser.pageAction.show(tab.id);
 
         if (pageNeedsTranslating && (await userWantsImmediateTranslation() === true)) {
