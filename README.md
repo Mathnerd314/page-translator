@@ -1,4 +1,4 @@
-# [Install Page Translator](https://github.com/jeremiahlee/page-translator/releases/download/v1.0.3/page_translator-1.0.3-an.fx.xpi)
+# [Install Page Translator](https://github.com/jeremiahlee/page-translator/releases/latest)
 
 One-click in-line page translation for Firefox
 
