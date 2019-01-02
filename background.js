@@ -186,7 +186,7 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
 /*
 Bind clicks on the page action icon to the WebExtension
 */
-browser.pageAction.onClicked.addListener(injectTranslatorCode);
+browser.pageAction.onClicked.addListener(doTranslator);
 
 
 /*
