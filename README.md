@@ -10,6 +10,8 @@ The translate icon will only appear if the page is in a foreign language. Page T
 
 A translate icon will appear in the address bar when a page is detected to be in a foreign language. Tap it to translate the page.
 
+You can also select "Translate" from the "..." dropdown menu in the address bar.
+
 ## Options
 
 Access Page Translator Revised's options by going to <a href="about:addons">Add-ons</a> > Extensions > Page Translator Revised.
@@ -18,7 +20,10 @@ If you'd prefer to always have the translate icon displayed, check "Always show 
 
 To change the translation service, select the service you'd like to use in the "Translate using" dropdown menu.
 
+## History
 
-© 2017–2018 Jeremiah Lee. 
+Original code from Page Translator © 2017–2018 Jeremiah Lee. 
+
+Updated by Mathnerd314.
 
 Page Translator Revised is released under the ISC License.
