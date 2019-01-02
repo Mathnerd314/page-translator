@@ -1,23 +1,9 @@
-// "people got mad when i put it all in one file" —Julia Evans
-
-/*
-===============================
-WebExtension specific functions
-===============================
-*/
-
-/*
-Returns true only if the URL's protocol is in APPLICABLE_PROTOCOLS.
-*/
 function protocolIsApplicable(tabUrl) {
     const APPLICABLE_PROTOCOLS = ['http:', 'https:'];
     let url = new URL(tabUrl);
     return APPLICABLE_PROTOCOLS.includes(url.protocol);
 }
 
-/*
-Returns true if user set option to always display the page action
-*/
 async function userAlwaysWantsIcon() {
     let option = await browser.storage.local.get("alwaysShowPageAction");
 
@@ -28,9 +14,6 @@ async function userAlwaysWantsIcon() {
     }
 }
 
-/*
-Returns true if user set option to automatically translate pages in foreign language
-*/
 async function userWantsImmediateTranslation() {
     let option = await browser.storage.local.get("automaticallyTranslate");
 
@@ -49,21 +32,13 @@ async function getPageLanguage(tabId) {
     }
 }
 
-function pageHasKnownLanguage(pageLanguage) {
-    if (pageLanguage === "und") {
-        return false;
-    } else {
-        return true;
-    }
-}
-
 function pageIsInForeignLanguage(pageLanguage) {
     // Normalize page language and browser languages
     pageLanguage = pageLanguage.toLowerCase();
 
-    // If language is unknown, assume page is in native language
+    // If language is unknown, better to show the UI
     if (pageLanguage === "und") {
-        return false;
+        return true;
     }
 
     let navigatorLanguages = navigator.languages.map(navigatorLanguage => {
@@ -108,47 +83,43 @@ If user always wants the icon, show it.
 If page is in foreign language, show it.
     If user wants auto translation, invoke it.
 */
-async function initializePageAction(tab) {
-    if (!protocolIsApplicable(tab.url)) {
-        browser.pageAction.hide(tab.id);
+async function initializePageAction(tabId, url) {
+    if(!url) {
+        let tab = await browser.tabs.get(tabId);
+        url = tab.url;
+    }
+    if (!url || !protocolIsApplicable(url)) {
+        browser.pageAction.hide(tabId);
         return;
     }
 
-    let pageLanguage = await getPageLanguage(tab.id);
-    let pageLanguageKnown = pageHasKnownLanguage(pageLanguage);
+    let pageLanguage = await getPageLanguage(tabId);
+    let pageLanguageKnown = pageLanguage !== "und";
     let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
 
     if (await userAlwaysWantsIcon() === true || 
-        pageLanguageKnown === false ||  // Better to show UI and not be needed
         pageNeedsTranslating === true
     ) {
-        browser.pageAction.show(tab.id);
+        browser.pageAction.show(tabId);
 
-        if (pageNeedsTranslating && (await userWantsImmediateTranslation() === true)) {
-            doTranslator(tab);
+        if (pageLanguageKnown && pageNeedsTranslating && (await userWantsImmediateTranslation() === true)) {
+            doTranslator({id: tabId, url: url});
         }
     } else {
-        browser.pageAction.hide(tab.id);
+        browser.pageAction.hide(tabId);
     }
 }
 
 
-
-/*
-=============================
-Page Translator functionality
-=============================
-*/
-
 function doTranslator(tab) {
     let executeScript = function(option) {
-        let url = false;
+        let url = tab.url;
 
         if ((typeof option.translationService !== "undefined") &&
             (option.translationService === "microsoft")) {
-            url = `https://ssl.microsofttranslator.com/bv.aspx?from=&to=&a=${encodeURIComponent(tab.url)}`;
+            url = `https://ssl.microsofttranslator.com/bv.aspx?from=&to=&a=${encodeURIComponent(url)}`;
         } else {
-            url = `https://translate.google.com/translate?sl=auto&tl=auto&u=${encodeURIComponent(tab.url)}`;
+            url = `https://translate.google.com/translate?sl=auto&tl=auto&u=${encodeURIComponent(url)}`;
         }
 
         browser.tabs.update(tab.id,{url: url});
@@ -157,41 +128,14 @@ function doTranslator(tab) {
     browser.storage.local.get("translationService").then(executeScript);
 }
 
-
-
-/*
-==========
-INITIALIZE
-==========
-*/
-
-/*
-When initialized, add the page action for all tabs.
-*/
-browser.tabs.query({}).then((tabs) => {
-    for (tab of tabs) {
-        initializePageAction(tab);
-    }
+browser.tabs.onActivated.addListener((activeInfo) => {
+    initializePageAction(activeInfo.tabId);
 });
 
-/*
-When a tab is updated, reset the page action for that tab.
-*/
 browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
     if ((typeof changeInfo.status === "string") && (changeInfo.status === "complete")) {
-        initializePageAction(tab);
+        initializePageAction(tab.id, tab.url);
     }
-});
+}, {properties: ["status"]});
 
-/*
-Bind clicks on the page action icon to the WebExtension
-*/
 browser.pageAction.onClicked.addListener(doTranslator);
-
-
-/*
-When Page Translator is installed or updated, show the release notes on the options page.
-*/
-browser.runtime.onInstalled.addListener(function() {
-    browser.runtime.openOptionsPage();
-});
