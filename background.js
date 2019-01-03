@@ -77,6 +77,11 @@ function pageIsInForeignLanguage(pageLanguage) {
     return true;
 }
 
+function translationPage(url) {
+    let parsed = new URL(url);
+    return parsed.hostname === "ssl.microsofttranslator.com" || parsed.hostname === "translate.google.com";
+}
+
 /*
 Show the Page Translator page action in the browser address bar, if applicable.
 If user always wants the icon, show it.
@@ -105,8 +110,9 @@ async function initializePageAction(tabId, url) {
     let pageLanguage = await getPageLanguage(tabId);
     let pageLanguageKnown = pageLanguage !== "und";
     let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
+    let isTranslationPage = translationPage(url);
 
-    if (pageLanguageKnown && pageNeedsTranslating && autoTranslate) {
+    if (pageLanguageKnown && pageNeedsTranslating && autoTranslate && !isTranslationPage) {
         doTranslator({id: tabId, url: url});
         browser.pageAction.hide(tabId);
         return;

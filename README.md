@@ -20,10 +20,14 @@ If you'd prefer to always have the translate icon displayed, check "Always show 
 
 To change the translation service, select the service you'd like to use in the "Translate using" dropdown menu.
 
-## History
+## Alternatives
+
+If you want to only translate some of the text on the page, or the page is not public, use a different extension, such as [To Google Translate](https://github.com/itsecurityco/to-google-translate)
+
+## History and development
 
 Original code from Page Translator © 2017–2018 Jeremiah Lee. 
 
-Updated by Mathnerd314.
+Updated and maintained by Mathnerd314.
 
 Page Translator Revised is released under the ISC License.
