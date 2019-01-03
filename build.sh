@@ -1,9 +1,7 @@
 #!/bin/bash
 
-echo -n "Enter version number: "
-read versionNumber
-
-zip "./dist/$versionNumber.zip" \
+rm "./page-translator.xpi"
+zip "./page-translator.xpi" \
 ./background.js \
 ./icons/icon-128.png \
 ./icons/icon-16.png \

@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Page Translator Revised",
-    "version": "2019.1.2",
+    "version": "2019.1.3.1",
     "developer": {
         "name": "Mathnerd314",
         "url": "https://github.com/Mathnerd314/page-translator"
@@ -15,25 +15,24 @@
         "128": "icons/icon-128.png"
     },
     "permissions": [
-        "activeTab",
         "storage",
         "tabs"
     ],
     "page_action": {
         "browser_style": true,
         "default_icon": "icons/icon.svg",
-        "default_title": "Translate"
+        "default_title": "Translate Page"
     },
     "background": {
         "scripts": ["background.js"]
     },
     "options_ui": {
-        "page": "options/options.html"
+        "page": "options/options.html",
+		"browser_style": true
     },
     "applications": {
         "gecko": {
-            "id": "page-translator-revised@mathnerd314.github.com",
-            "update_url": "https://raw.githubusercontent.com/Mathnerd314/page-translator/master/updates.json"
+            "id": "page-translator-revised@mathnerd314.github.com"
         }
     }
 }

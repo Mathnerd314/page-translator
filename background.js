@@ -25,11 +25,11 @@ async function userWantsImmediateTranslation() {
 }
 
 async function getPageLanguage(tabId) {
-    try {
-        return await browser.tabs.detectLanguage(tabId);
-    } catch (err) {
+    if(!browser.tabs.detectLanguage) {
+        browser.storage.local.set({alwaysShowPageAction: true});
         return "und";
     }
+    return await browser.tabs.detectLanguage(tabId);
 }
 
 function pageIsInForeignLanguage(pageLanguage) {
@@ -92,6 +92,11 @@ async function initializePageAction(tabId, url) {
         browser.pageAction.hide(tabId);
         return;
     }
+    
+    if (await userAlwaysWantsIcon() === true) {
+        browser.pageAction.show(tabId);
+        return;
+    }
 
     let pageLanguage = await getPageLanguage(tabId);
     let pageLanguageKnown = pageLanguage !== "und";
@@ -103,14 +108,11 @@ async function initializePageAction(tabId, url) {
         return;
     }
 
-    if (await userAlwaysWantsIcon() === true || 
-        pageNeedsTranslating === true
-    ) {
+    if (pageNeedsTranslating) {
         browser.pageAction.show(tabId);
     } else {
         browser.pageAction.hide(tabId);
     }
-
 }
 
 
@@ -135,10 +137,18 @@ browser.tabs.onActivated.addListener((activeInfo) => {
     initializePageAction(activeInfo.tabId);
 });
 
-browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
-    if ((typeof changeInfo.status === "string") && (changeInfo.status === "complete")) {
-        initializePageAction(tab.id, tab.url);
-    }
-}, {properties: ["status"]});
+try {
+    browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
+        if ((typeof changeInfo.status === "string") && (changeInfo.status === "complete")) {
+            initializePageAction(tab.id, tab.url);
+        }
+    }, {properties: ["status"]});
+} catch(err) {
+    browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
+        if ((typeof changeInfo.status === "string") && (changeInfo.status === "complete")) {
+            initializePageAction(tab.id, tab.url);
+        }
+    });
+}
 
 browser.pageAction.onClicked.addListener(doTranslator);
