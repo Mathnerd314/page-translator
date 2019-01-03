@@ -65,7 +65,7 @@ function pageIsInForeignLanguage(pageLanguage) {
         return true;
     }
 
-    // Get page's language subtag 
+    // Get page's language subtag
     let pageLanguageSubtag = pageLanguage.split('-', 1)[0];
 
     // Look for primary language subtag match
@@ -88,12 +88,16 @@ async function initializePageAction(tabId, url) {
         let tab = await browser.tabs.get(tabId);
         url = tab.url;
     }
+
     if (!url || !protocolIsApplicable(url)) {
         browser.pageAction.hide(tabId);
         return;
     }
-    
-    if (await userAlwaysWantsIcon() === true) {
+
+    let autoTranslate = await userWantsImmediateTranslation() === true;
+    let alwaysShowPageAction = await userAlwaysWantsIcon() === true;
+
+    if (alwaysShowPageAction && !autoTranslate) {
         browser.pageAction.show(tabId);
         return;
     }
@@ -102,13 +106,13 @@ async function initializePageAction(tabId, url) {
     let pageLanguageKnown = pageLanguage !== "und";
     let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
 
-    if (pageLanguageKnown && pageNeedsTranslating && (await userWantsImmediateTranslation() === true)) {
+    if (pageLanguageKnown && pageNeedsTranslating && autoTranslate) {
         doTranslator({id: tabId, url: url});
         browser.pageAction.hide(tabId);
         return;
     }
 
-    if (pageNeedsTranslating) {
+    if (pageNeedsTranslating || alwaysShowPageAction) {
         browser.pageAction.show(tabId);
     } else {
         browser.pageAction.hide(tabId);
