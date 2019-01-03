@@ -97,17 +97,20 @@ async function initializePageAction(tabId, url) {
     let pageLanguageKnown = pageLanguage !== "und";
     let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
 
+    if (pageLanguageKnown && pageNeedsTranslating && (await userWantsImmediateTranslation() === true)) {
+        doTranslator({id: tabId, url: url});
+        browser.pageAction.hide(tabId);
+        return;
+    }
+
     if (await userAlwaysWantsIcon() === true || 
         pageNeedsTranslating === true
     ) {
         browser.pageAction.show(tabId);
-
-        if (pageLanguageKnown && pageNeedsTranslating && (await userWantsImmediateTranslation() === true)) {
-            doTranslator({id: tabId, url: url});
-        }
     } else {
         browser.pageAction.hide(tabId);
     }
+
 }
 
 

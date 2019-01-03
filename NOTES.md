@@ -1,3 +1,11 @@
+# Testing checklist
+
+- [ ] Japanese page, default options (see icon, clicking translates)
+- [ ] English page, default options (icon disabled)
+- [ ] English page, always show
+- [ ] English page, always translate
+- [ ] Japanese page, always translate
+
 # Determining whether to show the icon or not
 
 As of HTML5, the proper way to declare the language for a page is the `lang` property on the `html` element. Example: `<html lang="en">`
