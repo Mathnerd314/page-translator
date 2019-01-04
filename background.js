@@ -4,28 +4,11 @@ function protocolIsApplicable(tabUrl) {
     return APPLICABLE_PROTOCOLS.includes(url.protocol);
 }
 
-async function userAlwaysWantsIcon() {
-    let option = await browser.storage.local.get("alwaysShowPageAction");
-
-    if (typeof option.alwaysShowPageAction !== "boolean") {
-        return false;
-    } else {
-        return option.alwaysShowPageAction;
-    }
-}
-
-async function userWantsImmediateTranslation() {
-    let option = await browser.storage.local.get("automaticallyTranslate");
-
-    if (typeof option.automaticallyTranslate !== "boolean") {
-        return false;
-    } else {
-        return option.automaticallyTranslate;
-    }
-}
+let options = {alwaysShowPageAction: false, automaticallyTranslate: false, translationService: "google"};
 
 async function getPageLanguage(tabId) {
     if(!browser.tabs.detectLanguage) {
+        options.alwaysShowPageAction = true;
         browser.storage.local.set({alwaysShowPageAction: true});
         return "und";
     }
@@ -99,10 +82,7 @@ async function initializePageAction(tabId, url) {
         return;
     }
 
-    let autoTranslate = await userWantsImmediateTranslation() === true;
-    let alwaysShowPageAction = await userAlwaysWantsIcon() === true;
-
-    if (alwaysShowPageAction && !autoTranslate) {
+    if (options.alwaysShowPageAction && !options.automaticallyTranslate) {
         browser.pageAction.show(tabId);
         return;
     }
@@ -112,13 +92,13 @@ async function initializePageAction(tabId, url) {
     let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
     let isTranslationPage = translationPage(url);
 
-    if (pageLanguageKnown && pageNeedsTranslating && autoTranslate && !isTranslationPage) {
+    if (pageLanguageKnown && pageNeedsTranslating && options.automaticallyTranslate && !isTranslationPage) {
         doTranslator({id: tabId, url: url});
         browser.pageAction.hide(tabId);
         return;
     }
 
-    if (pageNeedsTranslating || alwaysShowPageAction) {
+    if (pageNeedsTranslating || options.alwaysShowPageAction) {
         browser.pageAction.show(tabId);
     } else {
         browser.pageAction.hide(tabId);
@@ -127,20 +107,15 @@ async function initializePageAction(tabId, url) {
 
 
 function doTranslator(tab) {
-    let executeScript = function(option) {
-        let url = tab.url;
+    let url = tab.url;
 
-        if ((typeof option.translationService !== "undefined") &&
-            (option.translationService === "microsoft")) {
-            url = `https://ssl.microsofttranslator.com/bv.aspx?from=&to=&a=${encodeURIComponent(url)}`;
-        } else {
-            url = `https://translate.google.com/translate?sl=auto&tl=auto&u=${encodeURIComponent(url)}`;
-        }
+    if (options.translationService === "microsoft") {
+        url = `https://ssl.microsofttranslator.com/bv.aspx?from=&to=&a=${encodeURIComponent(url)}`;
+    } else {
+        url = `https://translate.google.com/translate?sl=auto&tl=auto&u=${encodeURIComponent(url)}`;
+    }
 
-        browser.tabs.update(tab.id,{url: url});
-    };
-
-    browser.storage.local.get("translationService").then(executeScript);
+    browser.tabs.update(tab.id,{url: url});
 }
 
 browser.tabs.onActivated.addListener((activeInfo) => {
@@ -162,3 +137,49 @@ try {
 }
 
 browser.pageAction.onClicked.addListener(doTranslator);
+
+let changed = true;
+function updateOptions(storedOptions) {
+    if (typeof storedOptions.alwaysShowPageAction === "boolean") {
+        changed = changed || options.alwaysShowPageAction !== storedOptions.alwaysShowPageAction;
+        options.alwaysShowPageAction = storedOptions.alwaysShowPageAction;
+    }
+
+    if (typeof storedOptions.automaticallyTranslate === "boolean") {
+        changed = changed || options.automaticallyTranslate !== storedOptions.automaticallyTranslate;
+        options.automaticallyTranslate = storedOptions.automaticallyTranslate;
+    }
+
+    if (typeof storedOptions.translationService === "string") {
+        changed = changed || options.translationService !== storedOptions.translationService;
+        options.translationService = storedOptions.translationService;
+    }
+    
+    if(changed) {
+        browser.tabs.query({}).then((tabs) => {
+            for (tab of tabs) {
+                initializePageAction(tab.id, tab.url);
+            }
+        });
+        changed = false;
+    }
+}
+
+browser.storage.local.get([
+    "alwaysShowPageAction",
+    "automaticallyTranslate",
+    "translationService"
+]).then(updateOptions);
+
+function updateChanged(changes, area) {
+  var changedItems = Object.keys(changes);
+  let changed = false;
+ 
+  let newOptions = {};
+  for (var item of changedItems) {
+    newOptions[item] = changes[item].newValue;
+  }
+  updateOptions(newOptions);
+}
+
+browser.storage.onChanged.addListener(updateChanged);

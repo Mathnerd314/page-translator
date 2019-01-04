@@ -1,10 +1,20 @@
 # Testing checklist
+```
+web-ext run -v -f "C:\Program Files\Firefox Developer Edition\firefox.exe" --start-url "https://www.mozilla.org/sv-SE/contribute/" --start-url "https://en.wikipedia.org/wiki/Main_Page"
+```
+- [ ] Default options, see icon, clicking translates, icon not present, go back, icon present
+- [ ] Wikipedia, icon not present
+- [ ] Ctrl-N, Ctrl-Shift-A, navigate to extension options
+- [ ] Toggle Always show -> icon appears/disappears in Wikipedia, stays in Mozilla
+- [ ] Always translate, Mozilla gets translated instantly. Toggling produces no further change.
+- [ ] Turn off auto translate, turn on always show, test that auto translate still translates
+- [ ] Change translator to Microsoft, go back on Mozilla, see that it translates w/ Microsoft
 
-- [ ] Japanese page, default options (see icon, clicking translates)
-- [ ] English page, default options (icon disabled)
-- [ ] English page, always show
-- [ ] English page, always translate
-- [ ] Japanese page, always translate
+## Android
+
+```
+web-ext run --target=firefox-android --android-device=HSMDU17228001108
+```
 
 # Determining whether to show the icon or not
 
@@ -21,8 +31,6 @@ Display the translate icon:
 3. If the page does specify a language and it does not match any of `navigator.languages` explicitly or partially with BCP 47 / IANA Language Subtag Registry primary language subtag
 
 http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
-
-
 
 # Re-do pageIsInForeignLanguage()
 
