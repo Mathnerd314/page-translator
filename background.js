@@ -4,7 +4,7 @@ function protocolIsApplicable(tabUrl) {
     return APPLICABLE_PROTOCOLS.includes(url.protocol);
 }
 
-let options = {alwaysShowPageAction: false, automaticallyTranslate: false, translationService: "google"};
+let options = {alwaysShowPageAction: false, automaticallyTranslate: false, translationService: "google", fromLang: "auto", toLang: "auto"};
 
 async function getPageLanguage(tabId) {
     if(!browser.tabs.detectLanguage) {
@@ -110,9 +110,9 @@ function doTranslator(tab) {
     let url = tab.url;
 
     if (options.translationService === "microsoft") {
-        url = `https://ssl.microsofttranslator.com/bv.aspx?from=&to=&a=${encodeURIComponent(url)}`;
+        url = `https://www.translatetheweb.com/?from=${options.fromLang}&to=${options.toLang}&a=${encodeURIComponent(url)}`;
     } else {
-        url = `https://translate.google.com/translate?sl=auto&tl=auto&u=${encodeURIComponent(url)}`;
+        url = `https://translate.google.com/translate?sl=${options.fromLang}&tl=${options.toLang}&u=${encodeURIComponent(url)}`;
     }
 
     browser.tabs.update(tab.id,{url: url});
@@ -140,19 +140,11 @@ browser.pageAction.onClicked.addListener(doTranslator);
 
 let changed = true;
 function updateOptions(storedOptions) {
-    if (typeof storedOptions.alwaysShowPageAction === "boolean") {
-        changed = changed || options.alwaysShowPageAction !== storedOptions.alwaysShowPageAction;
-        options.alwaysShowPageAction = storedOptions.alwaysShowPageAction;
-    }
-
-    if (typeof storedOptions.automaticallyTranslate === "boolean") {
-        changed = changed || options.automaticallyTranslate !== storedOptions.automaticallyTranslate;
-        options.automaticallyTranslate = storedOptions.automaticallyTranslate;
-    }
-
-    if (typeof storedOptions.translationService === "string") {
-        changed = changed || options.translationService !== storedOptions.translationService;
-        options.translationService = storedOptions.translationService;
+    for(o in options) {
+        if (typeof storedOptions[o] === typeof options[o]) {
+                changed = changed || options[o] !== storedOptions[o];
+                options[o] = storedOptions[o];
+        }
     }
     
     if(changed) {
