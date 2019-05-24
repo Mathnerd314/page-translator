@@ -16,7 +16,8 @@
     },
     "permissions": [
         "storage",
-        "tabs"
+        "tabs",
+	    "menus"
     ],
     "page_action": {
         "browser_style": true,

@@ -20,6 +20,7 @@ function saveOptions() {
     browser.storage.local.set({
         alwaysShowPageAction: document.querySelector("#always-show-page-action").checked,
         automaticallyTranslate: document.querySelector("#automatically-translate").checked,
+        contextMenu: document.querySelector("#context-menu").checked,
         translationService: service,
         fromLang: document.querySelector(service == "microsoft" ? "#microsoft_lang_from" : "#google_lang_from").value,
         toLang: document.querySelector(service == "microsoft" ? "#microsoft_lang_to" : "#google_lang_to").value
@@ -28,39 +29,36 @@ function saveOptions() {
 }
 
 async function restoreOptions() {
-    // Firefox 53 will erroneously complain that "ReferenceError: browser is not defined"
-    let options = await browser.storage.local.get([
-        "alwaysShowPageAction",
-        "automaticallyTranslate",
-        "translationService",
-        "fromLang",
-        "toLang"
-    ]);
+    let options = await browser.storage.local.get();
 
-    if (typeof options.alwaysShowPageAction !== "undefined") {
+    if (typeof options.alwaysShowPageAction === "boolean") {
         document.querySelector("#always-show-page-action").checked = options.alwaysShowPageAction;
         updateLayout();
     }
 
-    if (typeof options.automaticallyTranslate !== "undefined") {
+    if (typeof options.automaticallyTranslate === "boolean") {
         document.querySelector("#automatically-translate").checked = options.automaticallyTranslate;
     }
 
-    if (typeof options.translationService !== "undefined") {
+    if (typeof options.contextMenu === "boolean") {
+        document.querySelector("#context-menu").checked = options.contextMenu;
+    }
+
+    if (typeof options.translationService === "string") {
         document.querySelector("#translation-service").value = options.translationService;
     }
     
     let service = document.querySelector("#translation-service").value;
-    if (typeof options.fromLang !== "undefined") {
+    if (typeof options.fromLang === "string") {
         document.querySelector(service == "microsoft" ? "#microsoft_lang_from" : "#google_lang_from").value = options.fromLang;
     }
-    if (typeof options.toLang !== "undefined") {
+    if (typeof options.toLang === "string") {
         document.querySelector(service == "microsoft" ? "#microsoft_lang_to" : "#google_lang_to").value = options.toLang;
     }
 }
 
 document.addEventListener("DOMContentLoaded", restoreOptions);
-let arr = ["always-show-page-action","automatically-translate","translation-service"
+let arr = ["always-show-page-action","automatically-translate","translation-service","context-menu"
           ,"microsoft_lang_from","microsoft_lang_to","google_lang_from","google_lang_to"];
 for(let i = 0; i < arr.length;i++)
  document.querySelector("#" + arr[i]).addEventListener("change", saveOptions);

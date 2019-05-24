@@ -4,17 +4,23 @@ function protocolIsApplicable(tabUrl) {
     return APPLICABLE_PROTOCOLS.includes(url.protocol);
 }
 
-let options = {alwaysShowPageAction: false, automaticallyTranslate: false, translationService: "google", fromLang: "auto", toLang: "auto"};
+let options = {alwaysShowPageAction: false, automaticallyTranslate: false, translationService: "google", fromLang: "auto", toLang: "auto", contextMenu: false};
+
+let contextMenuItem = false;
 
 async function getPageLanguage(tabId) {
     if(!browser.tabs.detectLanguage) {
-        options.alwaysShowPageAction = true;
-        browser.storage.local.set({alwaysShowPageAction: true});
+        if(!options.alwaysShowPageAction) {
+            options.alwaysShowPageAction = true;
+            browser.storage.local.set({alwaysShowPageAction: true});
+        }
         return "und";
     }
     return await browser.tabs.detectLanguage(tabId);
 }
 
+
+// string -> boolean
 function pageIsInForeignLanguage(pageLanguage) {
     // Normalize page language and browser languages
     pageLanguage = pageLanguage.toLowerCase();
@@ -60,6 +66,8 @@ function pageIsInForeignLanguage(pageLanguage) {
     return true;
 }
 
+let translatedURLs = new Set();
+
 function translationPage(url) {
     let parsed = new URL(url);
     return parsed.hostname === "ssl.microsofttranslator.com" || parsed.hostname === "translate.google.com";
@@ -71,48 +79,69 @@ If user always wants the icon, show it.
 If page is in foreign language, show it.
     If user wants auto translation, invoke it.
 */
-async function initializePageAction(tabId, url) {
+async function determinePageAction(tabId, url) {
+    if (options.alwaysShowPageAction && !options.automaticallyTranslate) {
+        return true;
+    }
+
     if(!url) {
         let tab = await browser.tabs.get(tabId);
         url = tab.url;
     }
 
     if (!url || !protocolIsApplicable(url)) {
-        browser.pageAction.hide(tabId);
-        return;
-    }
-
-    if (options.alwaysShowPageAction && !options.automaticallyTranslate) {
-        browser.pageAction.show(tabId);
-        return;
+        return false;
     }
 
     let pageLanguage = await getPageLanguage(tabId);
     let pageLanguageKnown = pageLanguage !== "und";
     let pageNeedsTranslating = pageIsInForeignLanguage(pageLanguage);
-    let isTranslationPage = translationPage(url);
+    let isTranslationPage = translationPage(url) || translatedURLs.has(url);
 
     if (pageLanguageKnown && pageNeedsTranslating && options.automaticallyTranslate && !isTranslationPage) {
-        doTranslator({id: tabId, url: url});
-        browser.pageAction.hide(tabId);
-        return;
+        return "translate";
     }
 
-    if (pageNeedsTranslating || options.alwaysShowPageAction) {
+    return (pageNeedsTranslating || options.alwaysShowPageAction);
+}
+
+async function initializePageAction(tabId, url) {
+    let action = await determinePageAction(tabId, url);
+    
+    if (action === "translate") {
+        translatedURLs.add(url);
+        doTranslator({id: tabId, url: url});
+        action = false;
+    }
+    
+    if(action === true) {
         browser.pageAction.show(tabId);
     } else {
         browser.pageAction.hide(tabId);
     }
+    if(options.contextMenu && contextMenuItem) {
+        browser.menus.update(contextMenuItem, {visible: action});
+    }
 }
 
 
-function doTranslator(tab) {
+async function doTranslator(tab) {
     let url = tab.url;
 
+    let fromLang = options.fromLang;
+    if(fromLang == "auto2") {
+      let pageLanguage = await getPageLanguage(tab.id);
+      if (pageLanguage !== "und") {
+        fromLang = pageLanguage;
+      } else {
+        fromLang = (options.translationService === "microsoft") ? "" : "auto";
+      }
+    }
+
     if (options.translationService === "microsoft") {
-        url = `https://www.translatetheweb.com/?from=${options.fromLang}&to=${options.toLang}&a=${encodeURIComponent(url)}`;
+        url = `https://www.translatetheweb.com/?from=${fromLang}&to=${options.toLang}&a=${encodeURIComponent(url)}`;
     } else {
-        url = `https://translate.google.com/translate?sl=${options.fromLang}&tl=${options.toLang}&u=${encodeURIComponent(url)}`;
+        url = `https://translate.google.com/translate?sl=${fromLang}&tl=${options.toLang}&u=${encodeURIComponent(url)}`;
     }
 
     browser.tabs.update(tab.id,{url: url});
@@ -147,6 +176,17 @@ function updateOptions(storedOptions) {
         }
     }
     
+    if(options.contextMenu && !contextMenuItem) {
+        contextMenuItem = "translate-page";
+        browser.menus.create({
+          id: contextMenuItem,
+          title: "Translate Page",
+          command: "_execute_page_action"
+        });
+    } else if(contextMenuItem && !options.contextMenu) {
+        browser.menus.update(contextMenuItem, {visible: false});
+    }
+    
     if(changed) {
         browser.tabs.query({}).then((tabs) => {
             for (tab of tabs) {
@@ -157,15 +197,11 @@ function updateOptions(storedOptions) {
     }
 }
 
-browser.storage.local.get([
-    "alwaysShowPageAction",
-    "automaticallyTranslate",
-    "translationService"
-]).then(updateOptions);
+browser.storage.local.get().then(updateOptions);
 
 function updateChanged(changes, area) {
   var changedItems = Object.keys(changes);
-  let changed = false;
+  changed = false;
  
   let newOptions = {};
   for (var item of changedItems) {

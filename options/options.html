@@ -13,7 +13,8 @@
             </select>
             <label for="google_lang_from"> from </label>
 				<select id="google_lang_from">
-					<option value="auto">*Auto-Detect*</option>
+					<option value="auto">*Auto-Detect (Google)*</option>
+					<option value="auto2">*Auto-Detect (Firefox)*</option>
 					<option value="af">Afrikaans</option>
 					<option value="sq">Albanian</option>
 					<option value="am">Amharic</option>
@@ -119,7 +120,8 @@
 					<option value="zu">Zulu</option>
 				</select>
 				<select id="microsoft_lang_from">
-					<option value="">*Auto-Detect*</option>
+					<option value="">*Auto-Detect (Microsoft)*</option>
+					<option value="auto2">*Auto-Detect (Firefox)*</option>
 					<option value="af">Afrikaans</option>
 					<option value="ar">Arabic</option>
 					<option value="bn-BD">Bangla</option>
@@ -370,13 +372,13 @@
         <div>
             <label>
                 <input id="always-show-page-action" type="checkbox" value="true" />
-                Always show translate icon in the URL bar
+                Always show translation action
             </label>
         </div>
         <div>
             <label>
-                <input id="automatically-translate" type="checkbox" value="true" />
-                Automatically translate pages in foreign language
+                <input id="context-menu" type="checkbox" value="false" />
+                Show translation action in context menu
             </label>
         </div>
     </form>
